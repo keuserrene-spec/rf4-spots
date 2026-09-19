@@ -91,7 +91,7 @@ button.chip{cursor:pointer}button.chip:hover{border-color:var(--brand)}
 .card{display:flex;flex-direction:column;overflow:hidden}
 .card .accent{height:4px;background:var(--lo)}.card.hoch .accent{background:var(--hi)}.card.mittel .accent{background:var(--mid)}
 .media{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;background:var(--line)}
-.media button{position:relative;border:0;padding:0;height:120px;background:var(--surface2);cursor:zoom-in;overflow:hidden}
+.media button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;border:0;padding:0;height:120px;background:var(--surface2);cursor:zoom-in;overflow:hidden}
 .media img{width:100%;height:100%;object-fit:cover;display:block}
 .media .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);color:#fff;font-size:.7rem;padding:2px 8px;text-align:left}
 .card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px 0}
@@ -115,7 +115,7 @@ details.aus ul{margin:8px 0 0 18px;font-size:.86rem;display:grid;gap:3px}
 .waterpick{display:flex;gap:8px;flex-wrap:wrap}
 
 /* Lightbox + Toast */
-.lb{position:fixed;inset:0;background:rgba(3,10,12,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:50;padding:16px;gap:10px}
+.lb{position:fixed;inset:0;background:rgba(3,10,12,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:1000;padding:16px;gap:10px}
 .lb.on{display:flex}.lb img{max-width:100%;max-height:78vh;border-radius:10px}.lb .t{color:#fff;font-weight:700}.lb .s{color:#b9d2d5;font-size:.85rem}
 .lb button{position:absolute;background:rgba(255,255,255,.14);color:#fff;border:0;width:44px;height:44px;border-radius:50%;font-size:1.6rem;cursor:pointer}
 .lb .x{top:14px;right:14px}.lb .p{left:14px;top:50%}.lb .n{right:14px;top:50%}
@@ -278,7 +278,7 @@ function filtered(){
 const chips = (arr, cls) => arr && arr.length ? arr.map(x=>`<span class="chip ${cls}">${esc(x)}</span>`).join('') : '<span class="none">–</span>';
 function media(s){
   const b = s.bilder || {}; const ks = pick(b); if (!ks.length) return '';
-  return `<div class="media">${ks.map(k=>`<button data-id="${esc(s.id)}" data-k="${k}" aria-label="${esc(LABEL[k])}"><img loading="lazy" src="${esc(b[k])}" alt="${esc(LABEL[k])}" onerror="this.closest('button').remove()"><span class="cap">${esc(LABEL[k])}</span></button>`).join('')}</div>`;
+  return `<div class="media">${ks.map(k=>`<button data-id="${esc(s.id)}" data-k="${k}" aria-label="${esc(LABEL[k])}"><img loading="lazy" src="${esc(b[k])}" alt="${esc(LABEL[k])}" onerror="if(!this.dataset.r){this.dataset.r=1;this.src=this.src+(this.src.includes('?')?'&':'?')+'r=1'}else{this.closest('button').remove()}"><span class="cap">${esc(LABEL[k])}</span></button>`).join('')}</div>`;
 }
 function card(s){
   const tr = s.quelle_sprache && s.quelle_sprache !== 'de';
@@ -398,7 +398,7 @@ const toast = msg => { const t=$('toast'); t.textContent=msg; t.classList.add('o
 
 /* Lightbox */
 let lbList = [], lbI = 0;
-const lbShow = () => { const it = lbList[lbI]; $('lbImg').src = it.src; $('lbT').textContent = it.label; $('lbS').textContent = it.title + ' · ' + (lbI+1) + '/' + lbList.length; $('lb').classList.add('on'); };
+const lbShow = () => { const it = lbList[lbI]; if(!it) return; const im=$('lbImg'); im.onerror=()=>{ $('lbS').innerHTML = esc(it.title)+' · Bild lädt nicht – <a href="'+esc(it.src)+'" target="_blank" rel="noopener noreferrer" style="color:#8fd">Original öffnen ↗</a>'; }; im.src = it.src; $('lbT').textContent = it.label; $('lbS').textContent = it.title + ' · ' + (lbI+1) + '/' + lbList.length; $('lb').classList.add('on'); };
 const lbClose = () => { $('lb').classList.remove('on'); $('lbImg').src=''; };
 
 /* Events */
@@ -419,10 +419,11 @@ function onCards(e){
   const c = e.target.closest('.coord');
   if (c) { try { navigator.clipboard.writeText(c.dataset.c).then(()=>toast('Koordinaten kopiert: '+c.dataset.c)); } catch { toast(c.dataset.c); } return; }
   const ph = e.target.closest('.media button'); if(!ph) return;
-  const s = spots.find(x => x.id === ph.dataset.id); if(!s) return; const ks = pick(s.bilder);
-  lbList = ks.map(k => ({src:s.bilder[k], label:LABEL[k], title:s.gewaesser+' '+(s.koordinaten||'')})); lbI = ks.indexOf(ph.dataset.k); lbShow();
+  const btns = [...ph.closest('.media').querySelectorAll('button')]; const cd = ph.closest('.card');
+  const ttl = ((cd&&cd.querySelector('.water')?cd.querySelector('.water').textContent:'')+' '+(cd&&cd.querySelector('.coord')?cd.querySelector('.coord').dataset.c:'')).trim();
+  lbList = btns.map(b => ({src:b.querySelector('img').src, label:b.getAttribute('aria-label')||'', title:ttl})); lbI = Math.max(0, btns.indexOf(ph)); lbShow();
 }
-$('grid').addEventListener('click', onCards); document.addEventListener('click', e => { if (e.target.closest('#mapSpots')) onCards(e); });
+document.addEventListener('click', onCards);
 $('lb').addEventListener('click', e => {
   if (e.target.closest('.p')) { lbI=(lbI-1+lbList.length)%lbList.length; lbShow(); }
   else if (e.target.closest('.n')) { lbI=(lbI+1)%lbList.length; lbShow(); }
