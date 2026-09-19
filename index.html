@@ -19,7 +19,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 button,select,input{font:inherit;color:inherit}
-.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 48px;display:flex;flex-direction:column;gap:var(--gap)}
+.wrap{max-width:1640px;margin:0 auto;padding:18px 16px 48px;display:flex;flex-direction:column;gap:var(--gap)}
 h1{font-size:1.35rem;font-weight:800;line-height:1.1}h1 small{display:block;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:700;margin-bottom:2px}
 
 /* Baustein 1: BOX (jede Fläche der Seite) */
@@ -67,6 +67,25 @@ button.chip{cursor:pointer}button.chip:hover{border-color:var(--brand)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 12px}
 
+/* Layout: links Gewässer, Mitte Inhalt, rechts Hotspots */
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:var(--gap);align-items:start}
+.layout>*{min-width:0}
+.main{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
+.rail{display:flex;flex-direction:column;gap:var(--gap);position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.rail-r{display:none}
+@media (min-width:1300px){.layout{grid-template-columns:250px minmax(0,1fr) 290px}.rail-r{display:flex}}
+@media (max-width:899px){.layout{grid-template-columns:minmax(0,1fr)}.tabs{flex-wrap:nowrap;overflow-x:auto}.tabs .chip{flex:0 0 auto}.rail{position:static;max-height:none;overflow:visible}
+  .wnav{flex-direction:row!important;overflow-x:auto;gap:6px;padding:10px 12px!important}.wn{flex:0 0 auto;width:auto!important;border:1px solid var(--line)!important}.wgrp{display:none}}
+.wnav{display:flex;flex-direction:column;padding:6px}
+.wgrp{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}
+.wn{display:flex;align-items:center;gap:8px;border:0;background:none;border-radius:10px;padding:8px 10px;text-align:left;cursor:pointer;width:100%;font-size:.92rem}
+.wn:hover{background:var(--surface2)}.wn.on{background:var(--brand);color:var(--brand-ink)}
+.wn .nm{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wn .tot{color:var(--muted);font-size:.8rem;min-width:18px;text-align:right}.wn.on .tot{color:inherit;opacity:.85}
+.wn .new{background:var(--hi);color:#fff;border-radius:999px;font-size:.72rem;font-weight:700;padding:1px 7px}.wn.on .new{background:#fff;color:var(--brand)}
+.wn.zero .nm{color:var(--muted);font-weight:500}.wn.on.zero .nm{color:inherit}
+.hs{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;border:0;background:none;padding:8px 4px;border-bottom:1px solid var(--line);text-align:left;cursor:pointer}
+.hs:last-child{border-bottom:0}.hs:hover{background:var(--surface2)}.hs b{display:block;font-size:.9rem}.hs span{color:var(--muted);font-size:.78rem}
+.rail .box-b p{font-size:.84rem;color:var(--muted);margin-bottom:6px}
 /* Spot-Karten */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:var(--gap);align-items:start}
 .card{display:flex;flex-direction:column;overflow:hidden}
@@ -121,49 +140,71 @@ footer{color:var(--muted);font-size:.8rem}
     <div><b id="kHigh">–</b><span>Bestätigt (hoch)</span></div>
   </section>
 
-  <div class="bar box" id="bar">
-    <div class="box-b filters">
-      <div class="tabs" id="tabs" role="tablist">
-        <button class="chip on" data-t="spots" role="tab">Spots</button>
-        <button class="chip" data-t="map" role="tab">Karte</button>
-        <button class="chip" data-t="gear" role="tab">Ausrüstung</button>
-      </div>
-      <div class="chips" id="days" aria-label="Zeitraum">
-        <button class="chip on" data-d="today">Heute <i id="nToday"></i></button>
-        <button class="chip" data-d="yesterday">Gestern <i id="nYest"></i></button>
-        <button class="chip" data-d="week">Woche <i id="nWeek"></i></button>
-        <button class="chip" data-d="new" title="Neu seit deinem letzten Besuch">Neu <i id="nNew"></i></button>
-        <button class="chip" data-d="all">Alle <i id="nAll"></i></button>
-      </div>
-      <div class="fgrid">
-        <div class="field"><label for="fWater">Gewässer</label><select id="fWater"></select></div>
-        <div class="field" data-only="spots"><label for="fFisch">Fisch</label><select id="fFisch"><option value="">Alle Fische</option></select></div>
-        <div class="field" data-only="spots"><label for="fKoeder">Köder</label><select id="fKoeder"><option value="">Alle Köder</option></select></div>
-        <div class="field" data-only="spots"><label for="fSort">Sortierung</label><select id="fSort"><option value="new">Neueste zuerst</option><option value="conf">Vertrauen</option><option value="likes">Beliebteste</option></select></div>
-        <div class="field" data-only="spots"><label for="fText">Suche</label><input id="fText" type="search" placeholder="Fisch, Köder, Koordinate …"></div>
+  <div class="layout">
+   <aside class="rail" aria-label="Gewässer">
+     <div class="box"><div class="box-h"><h3>Gewässer</h3><span class="sub">+n = neu heute</span></div><nav class="wnav" id="waterNav"></nav></div>
+   </aside>
+
+   <div class="main">
+    <div class="bar box" id="bar">
+      <div class="box-b filters">
+        <div class="tabs" id="tabs" role="tablist">
+          <button class="chip on" data-t="latest" role="tab">Neueste</button>
+          <button class="chip" data-t="spots" role="tab">Alle Spots</button>
+          <button class="chip" data-t="map" role="tab">Karte</button>
+          <button class="chip" data-t="gear" role="tab">Top Ausrüstung</button>
+        </div>
+        <div class="chips" id="wCrumb" hidden><span class="chip on">Gewässer: <b id="wName"></b></span><button class="chip" id="wX">✕ alle Gewässer</button></div>
+        <div class="chips" id="days" aria-label="Zeitraum">
+          <button class="chip on" data-d="today">Heute <i id="nToday"></i></button>
+          <button class="chip" data-d="yesterday">Gestern <i id="nYest"></i></button>
+          <button class="chip" data-d="week">Woche <i id="nWeek"></i></button>
+          <button class="chip" data-d="new" title="Neu seit deinem letzten Besuch">Neu <i id="nNew"></i></button>
+          <button class="chip" data-d="all">Alle <i id="nAll"></i></button>
+        </div>
+        <div class="fgrid" id="fgrid">
+          <div class="field"><label for="fFisch">Fisch</label><select id="fFisch"><option value="">Alle Fische</option></select></div>
+          <div class="field"><label for="fKoeder">Köder</label><select id="fKoeder"><option value="">Alle Köder</option></select></div>
+          <div class="field"><label for="fSort">Sortierung</label><select id="fSort"><option value="new">Neueste zuerst</option><option value="conf">Vertrauen</option><option value="likes">Beliebteste</option></select></div>
+          <div class="field"><label for="fText">Suche</label><input id="fText" type="search" placeholder="Fisch, Köder, Koordinate …"></div>
+        </div>
       </div>
     </div>
+
+    <section id="viewLatest">
+      <div class="box" style="margin-bottom:var(--gap)"><div class="box-h"><h2>Neueste Spots</h2><span class="sub" id="latestInfo"></span></div></div>
+      <div class="grid" id="latestGrid"></div>
+    </section>
+
+    <div id="viewSpots" hidden><div class="sub" id="count" style="color:var(--muted);margin-bottom:10px"></div><div class="grid" id="grid"></div></div>
+
+    <section id="viewMap" hidden class="box">
+      <div class="box-h"><h2>Karte · Hotspots</h2><span class="sub" id="mapHint"></span></div>
+      <div class="box-b">
+        <div class="waterpick" id="waterPick" hidden></div>
+        <div id="mapBox" hidden>
+          <svg id="mapSvg" viewBox="0 0 400 280" role="img" aria-label="Spot-Karte"></svg>
+          <div class="legend"><span><i style="background:var(--hi)"></i>Hotspot (mehrere Quellen, Vertrauen hoch)</span><span><i style="background:var(--lo)"></i>Einzelmeldung</span><span>Zahl = Meldungen · Punkt antippen zeigt die Spots</span></div>
+          <div class="chips" id="ptCrumb" hidden style="margin-top:10px"><span class="chip on">Punkt <b id="ptName"></b></span><button class="chip" id="ptX">✕ aufheben</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewGear" hidden>
+      <div class="box" style="margin-bottom:var(--gap)"><div class="box-h"><h2>Top Ausrüstung</h2><div class="field" style="min-width:220px"><label for="gFish">Fisch</label><select id="gFish"></select></div></div>
+        <div class="box-b sub" id="gearInfo" style="color:var(--muted)"></div></div>
+      <div class="gear" id="gearOut"></div>
+    </section>
+   </div>
+
+   <aside class="rail rail-r" aria-label="Hotspots">
+     <div class="box"><div class="box-h"><h3>Hotspots</h3><span class="sub">mehrere Quellen</span></div><div class="box-b" id="hsList"></div></div>
+     <div class="box"><div class="box-h"><h3>So lesen</h3></div><div class="box-b">
+       <p><b>Vertrauen hoch</b>: mehrere unabhängige Quellen an derselben Stelle oder viele Likes.</p>
+       <p><b>Mittel/niedrig</b>: einzelne Meldung.</p>
+       <p><b>Bilder</b>: Spot mit Koordinaten, Setup mit Köder, Fischwert.</p></div></div>
+   </aside>
   </div>
-
-  <div id="viewSpots"><div class="sub" id="count" style="color:var(--muted);margin-bottom:10px"></div><main class="grid" id="grid"></main></div>
-
-  <section id="viewMap" hidden class="box">
-    <div class="box-h"><h2>Karte · Hotspots</h2><span class="sub" id="mapHint"></span></div>
-    <div class="box-b">
-      <div class="waterpick" id="waterPick" hidden></div>
-      <div id="mapBox" hidden>
-        <svg id="mapSvg" viewBox="0 0 400 280" role="img" aria-label="Spot-Karte"></svg>
-        <div class="legend"><span><i style="background:var(--hi)"></i>Hotspot (mehrere Quellen, Vertrauen hoch)</span><span><i style="background:var(--lo)"></i>Einzelmeldung</span><span>Zahl = Meldungen · Punkt antippen zeigt die Spots</span></div>
-        <div class="chips" id="ptCrumb" hidden style="margin-top:10px"><span class="chip on">Punkt <b id="ptName"></b></span><button class="chip" id="ptX">✕ aufheben</button></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="viewGear" hidden>
-    <div class="box" style="margin-bottom:var(--gap)"><div class="box-h"><h2>Beste Ausrüstung</h2><div class="field" style="min-width:220px"><label for="gFish">Fisch</label><select id="gFish"></select></div></div>
-      <div class="box-b sub" id="gearInfo" style="color:var(--muted)"></div></div>
-    <div class="gear" id="gearOut"></div>
-  </section>
 
   <footer>Alle Begriffe stammen aus dem deutschen Spiel-Glossar. „Übersetzt“ = Beitrag stammt aus einer anderen Sprache. Vertrauen „hoch“ = mehrere unabhängige Quellen an derselben Stelle oder viele Likes, „niedrig“ = einzelne, ungeprüfte Meldung. Jeder Eintrag verlinkt seine Quelle.</footer>
 </div>
@@ -177,7 +218,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const uniq = a => [...new Set(a)].sort((x,y)=>x.localeCompare(y,'de'));
 const RANK = {hoch:0, mittel:1, niedrig:2};
-const st = {tab:'spots', day:'today', water:'', fish:'', bait:'', text:'', sort:'new', pt:null, gfish:''};
+const st = {tab:'latest', day:'today', water:'', fish:'', bait:'', text:'', sort:'new', pt:null, gfish:''};
 let spots = [];
 
 /* Zeit */
@@ -195,7 +236,9 @@ function ago(iso){
 }
 
 /* Gewässer (deutsche Namen aus dem Spiel-Glossar) */
-const WATERS = ['Moskito-See','Elk Lake','Windenbach','Alte Festung','Fluss Belaja','Kuori','Bärensee','Wolchow','Siwerskyj Donez','Fluss Sura','Ladogasee','Bernstein-See','Der Ladoga-Archipel','Achtuba','Kupfersee','Untere Tunguska','Fluss Jama','Europäisches Nordmeer'];
+const WGROUPS = [['Seen',['Alte Festung','Bärensee','Bernstein-See','Der Ladoga-Archipel','Elk Lake','Kuori','Kupfersee','Ladogasee','Moskito-See']],
+  ['Flüsse',['Achtuba','Fluss Belaja','Fluss Jama','Fluss Sura','Siwerskyj Donez','Untere Tunguska','Windenbach','Wolchow']],['Meer',['Europäisches Nordmeer']]];
+const WATERS = WGROUPS.flatMap(g => g[1]);
 
 /* Bilder: 1) Spot mit Koordinaten, 2) Setup (Köder), 3) Fischwert */
 const LABEL = {spot:'Spot', map:'Spot · Koordinaten', setup:'Setup · Köder', fang:'Fischwert', net:'Kescherwert'};
@@ -289,24 +332,41 @@ function renderMapSpots(){
   el.hidden = !(st.tab==='map' && st.pt); el.innerHTML = (st.tab==='map' && st.pt) ? filtered().map(card).join('') : '';
 }
 
-/* Ansicht: Ausrüstung */
+/* Ansicht: Top Ausrüstung */
 const GCATS = ['Rute','Rolle','Schnur','Vorfach','Blei','Haken'];
 const GRE = /^(Rute|Rolle|Schnur|Vorfach|Blei|Haken):\s*(.+)$/;
 function renderGear(){
   const inScope = s => !st.water || s.gewaesser===st.water;
-  const cnt = {}; spots.forEach(s => { if ((s.ausruestung||[]).some(l=>GRE.test(l)) && inScope(s)) s.zielfisch.forEach(f => cnt[f]=(cnt[f]||0)+1); });
+  const cnt = {}; spots.forEach(s => { if (inScope(s) && ((s.ausruestung||[]).some(l=>GRE.test(l)) || (s.koeder||[]).length)) s.zielfisch.forEach(f => cnt[f]=(cnt[f]||0)+1); });
   const fish = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a] || a.localeCompare(b,'de'));
   const cur = st.gfish && fish.includes(st.gfish) ? st.gfish : (st.fish && fish.includes(st.fish) ? st.fish : fish[0]);
   $('gFish').innerHTML = fish.map(f => `<option ${f===cur?'selected':''}>${esc(f)}</option>`).join('');
-  if (!cur) { $('gearInfo').textContent = 'Noch keine Setup-Daten'+(st.water?' für '+st.water:'')+'.'; $('gearOut').innerHTML=''; return; }
-  const res = {}; GCATS.forEach(c => res[c] = {}); let n = 0;
-  spots.filter(s => s.zielfisch.includes(cur) && inScope(s)).forEach(s => { let has = false;
-    (s.ausruestung||[]).forEach(l => { const m = GRE.exec(l); if (!m) return; has = true; const name = m[2].trim(); res[m[1]][name] = (res[m[1]][name]||0) + 1; });
+  if (!cur) { $('gearInfo').textContent = 'Noch keine Daten'+(st.water?' für '+st.water:'')+'.'; $('gearOut').innerHTML=''; return; }
+  const cats = [...GCATS,'Köder','Montage']; const res = {}; cats.forEach(c => res[c] = {}); let n = 0, all = 0;
+  const add = (c, k) => { res[c][k] = (res[c][k]||0) + 1; };
+  spots.filter(s => s.zielfisch.includes(cur) && inScope(s)).forEach(s => { all++; let has = false;
+    (s.ausruestung||[]).forEach(l => { const m = GRE.exec(l); if (!m) return; has = true; add(m[1], m[2].trim()); });
+    (s.koeder||[]).forEach(k => add('Köder', k)); if (s.montage) add('Montage', s.montage);
     if (has) n++; });
-  $('gearInfo').textContent = `Basis: ${n} ${n===1?'Setup':'Setups'} für ${cur}${st.water?' · '+st.water:''} · gezählt nach exakter Angabe (Größe, kg, Länge …)`;
-  $('gearOut').innerHTML = GCATS.map(c => { const top = Object.entries(res[c]).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],'de')).slice(0,3);
+  $('gearInfo').textContent = `${all} ${all===1?'Spot':'Spots'} für ${cur}${st.water?' · '+st.water:''}, davon ${n} mit lesbarem Setup · gezählt nach exakter Angabe (Größe, kg, Länge …)`;
+  $('gearOut').innerHTML = cats.map(c => { const top = Object.entries(res[c]).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],'de')).slice(0,3);
     return `<div class="box g"><div class="box-h"><h3>${c}</h3></div><div class="box-b">${top.length ? top.map(([k,v])=>{ const m = /^(.*?)\s*\((.*)\)\s*$/.exec(k);
       return `<div class="it"><span>${esc(m?m[1]:k)}${m?`<small>${esc(m[2])}</small>`:''}</span><i>${v}×</i></div>`; }).join('') : '<span class="sub" style="color:var(--muted)">–</span>'}</div></div>`; }).join('');
+}
+
+/* Linke Leiste: Gewässer */
+function renderWaterNav(){
+  const today = {}, all = {}; spots.forEach(s => { all[s.gewaesser]=(all[s.gewaesser]||0)+1; if (inDay(s,'today')) today[s.gewaesser]=(today[s.gewaesser]||0)+1; });
+  const item = (n, label, tot, nw) => `<button class="wn ${st.water===n?'on':''} ${tot?'':'zero'}" data-w="${esc(n)}"><span class="nm">${esc(label)}</span>${nw?`<span class="new" title="${nw} neu heute">+${nw}</span>`:''}<span class="tot">${tot}</span></button>`;
+  $('waterNav').innerHTML = item('', 'Alle Gewässer', spots.length, spots.filter(s=>inDay(s,'today')).length) +
+    WGROUPS.map(([g, arr]) => `<div class="wgrp">${g}</div>` + arr.map(n => item(n, n, all[n]||0, today[n]||0)).join('')).join('');
+}
+/* Rechte Leiste: Hotspots */
+function renderHotspots(){
+  const hs = []; WATERS.forEach(w => clusters(spots.filter(s=>s.gewaesser===w)).forEach(c => { if (c.q.size>1) hs.push({w, c}); }));
+  hs.sort((a,b)=>b.c.ids.length-a.c.ids.length);
+  $('hsList').innerHTML = hs.length ? hs.slice(0,8).map((h,i) => `<button class="hs" data-i="${i}"><div><b>${esc(h.w)}</b><span>${h.c.x}:${h.c.y} · ${[...h.c.fish].slice(0,2).map(esc).join(', ')}</span></div><span class="chip hi">${h.c.ids.length}×</span></button>`).join('') : '<p>Noch keine Hotspots.</p>';
+  $('hsList')._hs = hs;
 }
 
 /* Render */
@@ -314,10 +374,17 @@ function render(){
   document.querySelectorAll('#tabs .chip').forEach(b => b.classList.toggle('on', b.dataset.t===st.tab));
   document.querySelectorAll('#days .chip').forEach(b => b.classList.toggle('on', b.dataset.d===st.day));
   ['today','yesterday','week','new'].forEach(d => $({today:'nToday',yesterday:'nYest',week:'nWeek',new:'nNew'}[d]).textContent = spots.filter(s=>inDay(s,d)).length); $('nAll').textContent = spots.length;
-  $('days').hidden = st.tab!=='spots'; document.querySelectorAll('[data-only]').forEach(e => e.hidden = e.dataset.only!==st.tab);
-  const cnt = {}; pool().forEach(s => cnt[s.gewaesser]=(cnt[s.gewaesser]||0)+1);
-  $('fWater').innerHTML = '<option value="">Alle Gewässer</option>' + WATERS.map(n=>`<option value="${esc(n)}" ${st.water===n?'selected':''}>${esc(n)}${st.tab==='spots'?` (${cnt[n]||0})`:''}</option>`).join('');
-  $('viewSpots').hidden = st.tab!=='spots'; $('viewMap').hidden = st.tab!=='map'; $('viewGear').hidden = st.tab!=='gear';
+  $('days').hidden = st.tab!=='spots'; $('fgrid').hidden = st.tab!=='spots';
+  $('wCrumb').hidden = !st.water || st.tab==='latest'; $('wName').textContent = st.water;
+  renderWaterNav();
+  $('viewLatest').hidden = st.tab!=='latest'; $('viewSpots').hidden = st.tab!=='spots'; $('viewMap').hidden = st.tab!=='map'; $('viewGear').hidden = st.tab!=='gear';
+  if (st.tab==='latest') {
+    const byNew = (a,b)=>new Date(b.gefunden)-new Date(a.gefunden);
+    const hour = spots.filter(s => Date.now()-new Date(s.gefunden) <= 36e5).sort(byNew).slice(0,5);
+    const list = hour.length ? hour : spots.slice().sort(byNew).slice(0,5);
+    $('latestInfo').textContent = hour.length ? `${list.length} ${list.length===1?'Spot':'Spots'} aus der letzten Stunde` : 'In der letzten Stunde nichts Neues – die 5 zuletzt gefundenen';
+    $('latestGrid').innerHTML = list.map(card).join('');
+  }
   if (st.tab==='spots') {
     const list = filtered();
     $('count').textContent = `${list.length} ${list.length===1?'Spot':'Spots'}${DAYTXT[st.day] ? ' '+DAYTXT[st.day] : ''}${st.water?' · '+st.water:''}`;
@@ -337,7 +404,9 @@ const lbClose = () => { $('lb').classList.remove('on'); $('lbImg').src=''; };
 /* Events */
 $('tabs').addEventListener('click', e => { const b=e.target.closest('.chip'); if(!b) return; st.tab=b.dataset.t; st.pt=null; render(); });
 $('days').addEventListener('click', e => { const b=e.target.closest('.chip'); if(!b) return; st.day=b.dataset.d; render(); });
-$('fWater').onchange = e => { st.water=e.target.value; st.pt=null; render(); };
+$('waterNav').addEventListener('click', e => { const b=e.target.closest('.wn'); if(!b) return; st.water=b.dataset.w; st.pt=null; if (st.tab==='latest') st.tab='spots'; render(); scrollTo({top:0,behavior:'smooth'}); });
+$('wX').onclick = () => { st.water=''; st.pt=null; render(); };
+$('hsList').addEventListener('click', e => { const b=e.target.closest('.hs'); if(!b) return; const h=$('hsList')._hs[+b.dataset.i]; st.water=h.w; st.tab='map'; st.pt=h.c.ids; $('ptName').textContent=h.c.x+':'+h.c.y; render(); });
 $('fFisch').onchange = e => { st.fish=e.target.value; render(); };
 $('fKoeder').onchange = e => { st.bait=e.target.value; render(); };
 $('fSort').onchange = e => { st.sort=e.target.value; render(); };
@@ -363,7 +432,7 @@ document.addEventListener('keydown', e => { if(!$('lb').classList.contains('on')
   if(e.key==='Escape') lbClose(); if(e.key==='ArrowLeft'){lbI=(lbI-1+lbList.length)%lbList.length;lbShow();} if(e.key==='ArrowRight'){lbI=(lbI+1)%lbList.length;lbShow();} });
 
 function start(db){
-  spots = db.spots; derive();
+  spots = db.spots; derive(); renderHotspots();
   $('upd').textContent = 'Stand: ' + ago(db.updated);
   $('kToday').textContent = spots.filter(s=>inDay(s,'today')).length; $('kAll').textContent = spots.length;
   $('kWater').textContent = new Set(spots.map(s=>s.gewaesser)).size; $('kHigh').textContent = spots.filter(s=>s._v==='hoch').length;
