@@ -1,0 +1,1537 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#061418">
+<title>RF4 Spot-Finder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b2a30'/%3E%3Cpath d='M5 16c4-6 10-8 15-5l5-3v16l-5-3c-5 3-11 1-15-5z' fill='%232dd4bf'/%3E%3Ccircle cx='11' cy='15' r='1.6' fill='%230b2a30'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#061418;--bg2:#0a1f25;--card:#0e2a31;--card2:#123640;--line:#1b4650;--line2:#26606c;
+  --text:#eaf6f4;--muted:#88aab0;--accent:#2dd4bf;--accent2:#22d3ee;--ink:#04211d;--gold:#fbbf24;--red:#fb7185;
+  --hoch:#4ade80;--mittel:#fbbf24;--niedrig:#94a3b8;--r:18px;--shadow:0 10px 30px rgba(0,0,0,.4)
+}
+@media (prefers-color-scheme:light){:root{
+  --bg:#eaf3f2;--bg2:#dfeceb;--card:#fff;--card2:#f2f9f8;--line:#c9ddda;--line2:#9fc4bf;
+  --text:#0b2529;--muted:#527175;--accent:#0f766e;--accent2:#0e7490;--ink:#fff;--gold:#b45309;--red:#be123c;
+  --hoch:#15803d;--mittel:#b45309;--niedrig:#64748b;--shadow:0 8px 22px rgba(15,60,60,.12)}}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;
+  background:
+   radial-gradient(900px 420px at 85% -8%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 65%),
+   radial-gradient(700px 380px at -5% 12%,color-mix(in srgb,var(--accent2) 14%,transparent),transparent 60%),
+   var(--bg)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+/* ---------- Kopf ---------- */
+.hero{padding:26px 0 6px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:50px;height:50px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 35%,transparent)}
+.logo svg{width:30px;height:30px}
+h1{font-size:1.7rem;line-height:1.05;letter-spacing:-.01em;font-weight:800}
+h1 small{display:block;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:4px}
+.stand{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);background:var(--card);border:1px solid var(--line);padding:7px 14px;border-radius:99px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--hoch);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hoch) 70%,transparent)}70%,100%{box-shadow:0 0 0 9px transparent}}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 6px}
+.kpi{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.kpi b{display:block;font-size:2rem;line-height:1;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi.hot b{color:var(--accent)}
+.kpi::after{content:"";position:absolute;right:-18px;top:-18px;width:70px;height:70px;border-radius:50%;background:color-mix(in srgb,var(--accent) 10%,transparent)}
+/* ---------- Gewässer ---------- */
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:26px 0 12px}
+.sec h2{font-size:1.15rem;font-weight:800;letter-spacing:.01em}
+.sec p{color:var(--muted);font-size:.85rem}
+.waters{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.wt{position:relative;text-align:left;border:1px solid var(--line);border-radius:var(--r);color:var(--text);cursor:pointer;padding:0;overflow:hidden;min-height:118px;font:inherit;
+  background:var(--bg2);transition:transform .16s,border-color .16s,box-shadow .16s}
+.wt:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:var(--shadow)}
+.wt[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent),var(--shadow)}
+.wt .bg{position:absolute;inset:0;background:
+   repeating-radial-gradient(circle at 82% 18%,rgba(255,255,255,.07) 0 1.5px,transparent 1.5px 13px),
+   linear-gradient(150deg,var(--c1),var(--c2))}
+.wt.see{--c1:#0f5b66;--c2:#0a2f3b}.wt.fluss{--c1:#1d6b54;--c2:#0b2e33}.wt.meer{--c1:#1d4a94;--c2:#0a1f47}.wt.leer{--c1:#1b3438;--c2:#0f2226}
+.wt .in{position:relative;padding:13px 14px;display:flex;flex-direction:column;height:100%;min-height:118px;color:#fff}
+.wt .ico{width:26px;height:26px;opacity:.9;margin-bottom:auto}
+.wt .nm{font-weight:800;font-size:1rem;line-height:1.15;margin-top:12px;text-shadow:0 1px 6px rgba(0,0,0,.35)}
+.wt .sub{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:.74rem;color:rgba(255,255,255,.78)}
+.wt .n{position:absolute;right:12px;top:10px;min-width:30px;text-align:center;font-weight:800;font-size:1.05rem;background:rgba(3,15,18,.55);backdrop-filter:blur(4px);border-radius:10px;padding:2px 9px;border:1px solid rgba(255,255,255,.14)}
+.wt .n.today{background:var(--accent);color:var(--ink);border-color:transparent}
+.wt.leer{opacity:.62}
+.wt.leer .n{display:none}
+/* ---------- Werkzeugleiste ---------- */
+.bar{position:sticky;top:0;z-index:10;margin-top:22px;padding:12px 0;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.bar .row1{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-size:.86rem;font-weight:700;padding:7px 16px;border-radius:9px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--ink)}
+.seg i{font-style:normal;opacity:.7;margin-left:6px;font-size:.78rem}
+select,input{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font:inherit;font-size:.88rem;outline:none;min-width:0}
+select:focus,input:focus{border-color:var(--accent)}
+.bar .grow{flex:1;min-width:150px}
+.crumb{display:none;align-items:center;gap:8px;margin-top:10px;font-size:.88rem}
+.crumb.on{display:flex}
+.crumb b{color:var(--accent)}
+.crumb button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:99px;padding:3px 12px;cursor:pointer;font:inherit;font-size:.8rem}
+.count{color:var(--muted);font-size:.85rem;margin:14px 0 10px}
+/* ---------- Spot-Karten ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:16px;padding-bottom:16px}
+.card{position:relative;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:transform .16s,border-color .16s}
+.card:hover{transform:translateY(-2px);border-color:var(--line2)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c);z-index:2}
+.card.hoch{--c:var(--hoch)}.card.mittel{--c:var(--mittel)}.card.niedrig{--c:var(--niedrig)}
+.gal{display:grid;grid-template-columns:1.55fr 1fr;gap:3px;height:190px;background:var(--bg)}
+.gal .ph{position:relative;overflow:hidden;background:var(--bg2);border:0;padding:0;cursor:zoom-in;display:block;height:100%}
+.gal .side{display:grid;grid-auto-rows:1fr;gap:3px;min-height:0}
+.gal .side .ph{min-height:0}
+.gal img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s}
+.gal .ph:hover img{transform:scale(1.05)}
+.cap{position:absolute;left:6px;bottom:6px;font-size:.62rem;font-weight:700;letter-spacing:.04em;background:rgba(4,20,24,.8);color:#eaf6f4;padding:1px 8px;border-radius:6px}
+.gal .main .cap{font-size:.72rem;padding:2px 10px}
+.inner{padding:13px 15px 12px 20px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.water{font-size:1.12rem;font-weight:800;line-height:1.2}
+.coord{flex:none;font:700 .95rem ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);background:var(--accent);border:0;padding:4px 11px;border-radius:9px;cursor:pointer}
+.coord:hover{filter:brightness(1.1)}
+.eck{font-size:.82rem;color:var(--accent);margin-top:8px;font-weight:600}
+.row{display:flex;gap:10px;align-items:baseline;margin-top:8px}
+.lbl{flex:none;width:52px;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:.8rem;padding:2px 10px;border-radius:8px;background:var(--bg2);border:1px solid var(--line)}
+.tag.fish{border-color:color-mix(in srgb,var(--gold) 55%,transparent);color:var(--gold);background:color-mix(in srgb,var(--gold) 9%,transparent);font-weight:600}
+.aus{margin-top:9px;font-size:.82rem}
+.aus summary{cursor:pointer;color:var(--accent);font-weight:700}
+.aus ul{margin:6px 0 0 18px;color:var(--muted);line-height:1.5}
+.note{margin-top:8px;font-size:.82rem;color:var(--muted);line-height:1.45;max-height:5.4em;overflow:auto;white-space:pre-line}
+.foot{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:11px;padding-top:9px;border-top:1px dashed var(--line);font-size:.76rem;color:var(--muted)}
+.badge{padding:1px 9px;border-radius:99px;border:1px solid currentColor;font-weight:700}
+.badge.hoch{color:var(--hoch)}.badge.mittel{color:var(--mittel)}.badge.niedrig{color:var(--niedrig)}
+.lang{padding:1px 7px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);font-weight:700}
+.likes{font-weight:700}
+.links{margin-left:auto;display:flex;gap:12px}
+.foot a{color:var(--accent);text-decoration:none;font-weight:700}
+.foot a:hover{text-decoration:underline}
+.empty{grid-column:1/-1;text-align:center;padding:56px 16px;color:var(--muted);border:1px dashed var(--line2);border-radius:var(--r)}
+footer{color:var(--muted);font-size:.76rem;padding:12px 0 46px;border-top:1px solid var(--line);margin-top:10px}
+/* Lightbox + Toast */
+.lb{position:fixed;inset:0;z-index:50;background:rgba(2,10,12,.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:14px}
+.lb.on{display:flex}
+.lb img{max-width:100%;max-height:78vh;border-radius:10px;box-shadow:0 10px 50px rgba(0,0,0,.6)}
+.lb .t{color:#eaf6f4;margin:12px 0 4px;font-weight:700;text-align:center}
+.lb .s{color:#88aab0;font-size:.85rem}
+.lb button{position:absolute;background:rgba(255,255,255,.12);border:0;color:#fff;font-size:1.6rem;width:46px;height:46px;border-radius:50%;cursor:pointer}
+.lb .x{top:14px;right:14px}.lb .p{left:14px;top:50%}.lb .n{right:14px;top:50%}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--accent);color:var(--ink);padding:8px 16px;border-radius:99px;font-weight:700;font-size:.85rem;opacity:0;pointer-events:none;transition:.2s;z-index:60}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.waters{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+@media (max-width:460px){.grid{grid-template-columns:1fr}.gal{height:170px}h1{font-size:1.35rem}.stand .t{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="logo"><svg viewBox="0 0 32 32"><path d="M4 16c4-7 11-9 16-5l6-3v16l-6-3c-5 4-12 2-16-5z" fill="#04211d"/><circle cx="11" cy="15" r="1.7" fill="#2dd4bf"/></svg></div>
+    <h1><small>Russian Fishing 4</small>Spot-Finder</h1>
+    <div class="stand"><i class="dot"></i><span id="upd">lädt …</span></div>
+  </header>
+
+  <section class="kpis" aria-label="Übersicht">
+    <div class="kpi hot"><b id="kToday">–</b><span>Spots heute</span></div>
+    <div class="kpi"><b id="kAll">–</b><span>Spots gesamt</span></div>
+    <div class="kpi"><b id="kWater">–</b><span>Gewässer mit Spots</span></div>
+    <div class="kpi"><b id="kHigh">–</b><span>Bestätigt (hoch)</span></div>
+  </section>
+
+  <div class="sec"><h2>Gewässer</h2><p id="wHint">Antippen zum Filtern</p></div>
+  <div class="waters" id="waters"></div>
+
+  <div class="bar" id="bar">
+    <div class="row1">
+      <div class="seg" id="days"><button data-d="today" aria-pressed="true">Heute<i id="nToday"></i></button><button data-d="all" aria-pressed="false">Alle<i id="nAll"></i></button></div>
+      <select id="fFisch" aria-label="Fisch"><option value="">Alle Fische</option></select>
+      <select id="fKoeder" aria-label="Köder"><option value="">Alle Köder</option></select>
+      <select id="fSort" aria-label="Sortierung"><option value="new">Neueste zuerst</option><option value="conf">Vertrauen</option><option value="likes">Beliebteste</option></select>
+      <input class="grow" id="fText" type="search" placeholder="Suchen …" aria-label="Suche">
+    </div>
+    <div class="crumb" id="crumb"><span>Gewässer:</span><b id="crumbName"></b><button id="crumbX">✕ alle Gewässer</button></div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <main class="grid" id="grid"></main>
+
+  <footer>Alle Begriffe stammen aus dem deutschen Spiel-Glossar. Beiträge in anderen Sprachen sind mit „ÜBERSETZT“ markiert. Vertrauen „hoch“ = mehrere unabhängige Quellen oder viele Likes, „niedrig“ = einzelne, ungeprüfte Meldung. Jeder Eintrag verlinkt seine Quelle.</footer>
+</div>
+
+<div class="lb" id="lb"><button class="x" aria-label="Schließen">×</button><button class="p" aria-label="Zurück">‹</button><button class="n" aria-label="Weiter">›</button><img id="lbImg" alt=""><div class="t" id="lbT"></div><div class="s" id="lbS"></div></div>
+<div class="toast" id="toast"></div>
+
+<script id="embedded" type="application/json">{
+ "updated": "2026-09-19T10:20:00+00:00",
+ "spots": [
+  {
+   "id": "rt-20260919-nordmeer-0851",
+   "gewaesser": "Europäisches Nordmeer",
+   "koordinaten": null,
+   "zielfisch": [
+    "Gefleckter Seewolf",
+    "Wittling"
+   ],
+   "koeder": [],
+   "montage": "Pilken (Meer)",
+   "eckdaten": "Grube 120 m (statt Koordinate) · beide Trophäen mit Pass",
+   "hinweis": "Pilken im Bodenbereich. Im Setzkescher u. a. Wittling, Köhler, Rotbarsch, Gefleckter Seewolf.",
+   "ausruestung": [
+    "Rute: MTA Poseidon 70-100",
+    "(restliche Ausrüstung im Bild zu klein zum sicheren Lesen)"
+   ],
+   "bilder": {
+    "net": "https://rf4trophies.com/image-proxy/e6bb182f5982b1cda2382b24795b2f03a282d5f60a39edba90f6f771c7abcdf2",
+    "map": "https://rf4trophies.com/image-proxy/b2d59112eb1ea07c2b8365995542e62113588864bf74f069950f0a87d6d0bafa",
+    "setup": "https://rf4trophies.com/image-proxy/e3288efd720befa37d156bce1cade1d4ce0a6ea9bec71d8251f8082a9772ae35"
+   },
+   "quelle": "https://rf4trophies.com/trophy/20612",
+   "gefunden": "2026-09-19T06:51:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "niedrig"
+  },
+  {
+   "id": "rt-20260919-kuori-98-109",
+   "gewaesser": "Kuori",
+   "koordinaten": "98:109",
+   "zielfisch": [
+    "Brachse"
+   ],
+   "koeder": [
+    "Perlgraupenbrei",
+    "Lockfutter „Brachse“ (Eigenmischung)"
+   ],
+   "montage": "Feedern (Schlaufenmontage)",
+   "eckdaten": "Clip 12 · Trophäe 4,666 kg / 62 cm · Angler KARA MAKSIM",
+   "hinweis": "Lockfutter: gemahlene Perlgraupen mit gekochter Hirse, gehacktem Wurm, Kleie und Erbsen, Aroma scharfer Knoblauch. Im Setzkescher: 5 Brachsen (4,67 / 3,24 / 1,41 / 1,04 / 1,02 kg) und 6 Hechte.",
+   "ausruestung": [
+    "Rute: Mechta P240",
+    "Rolle: Express Fishing Adriatica 5000S",
+    "Schnur: Snake Power Carbon 33LB, 300 m",
+    "Glocke: Express Fishing Round Bell FA",
+    "Blei: Westhill FlyCast Sinker #8 (21 g)",
+    "Vorfach: geflochten (Eigenbau)",
+    "Haken: Zenith WG Hook S1",
+    "Köder: Nature Perlgraupenbrei"
+   ],
+   "bilder": {
+    "spot": "https://rf4trophies.com/image-proxy/2619b6c3d5c3440c2aa13b319f86f36857070def15cd21ed6cb03708d0cd11d9",
+    "fang": "https://rf4trophies.com/image-proxy/b31af65c9f16d84d7cdbd1b88f99327a7686e4779058b1e8f6ac7e4d3d4780b4",
+    "setup": "https://rf4trophies.com/image-proxy/d1ee02cf01e810477fc51d3cab5f5f04f7b877801eb1e5581aa1409cd7106f66",
+    "net": "https://rf4trophies.com/image-proxy/664719031cbfedbfb7af267edee142e61e8c2f13940da033a5b7eb276c783ce2",
+    "map": "https://rf4trophies.com/image-proxy/acc354937e5c8b1acbc943f0bf191fa80334f5477f21c7fffdd0afb27acb92cf"
+   },
+   "quelle": "https://rf4trophies.com/trophy/17641",
+   "gefunden": "2026-09-19T06:20:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "niedrig"
+  },
+  {
+   "id": "rt-20260919-donez-33-134",
+   "gewaesser": "Siwerskyj Donez",
+   "koordinaten": "33:134",
+   "zielfisch": [
+    "Wildkarpfen"
+   ],
+   "koeder": [
+    "Heilbutt Pellets 18",
+    "Thunfisch Pellets 18",
+    "Heilbutt-Dip (würzig)"
+   ],
+   "montage": "Grundangeln (Karpfen)",
+   "eckdaten": "Clip 20 m · Trophäe 27,59 kg / 1,19 m",
+   "hinweis": "Über 2 Monate nur auf Wildkarpfen geangelt, ca. 5–6 Tausend gefangen. Am besten lief die Montage mit Heilbutt-Dip und Lockfutter. Die zwei anderen Montagen waren gleich, nur mit Dip Atlantik-Thunfisch bzw. PVA-Thunfisch. Große Pellets (24, 25) gehen auch, aber seltener. Beifang: kleine Störe und Belugas.",
+   "ausruestung": [
+    "Rute: Kingfisher Legacy Ti 13-4.50",
+    "Rolle: Beluga Venga II 10000",
+    "Schnur: Snake Ultra Line 84LB CLR, 300 m",
+    "Leadcore: Solid Materials Carp Leadcore Brown Camo 80LB",
+    "Blei: Helen Van Zandt CL Gripp Clay SW 70",
+    "Vorfach: geflochten 36 kg (Eigenbau)",
+    "Haken: Zenith Etalon Mugga S1"
+   ],
+   "bilder": {
+    "fang": "https://rf4trophies.com/image-proxy/39933e39f453c6bbd4a94e178d2fb5b0cbafda5218d105626f36ab2cb9d5ba02",
+    "setup": "https://rf4trophies.com/image-proxy/344ae78eaaeb5cbcc99dda1a8c3df5a327bf838e8c5b735273cac3f972fe5b6b",
+    "net": "https://rf4trophies.com/image-proxy/a97ca83c5250b7195c86a1fa956799444e24e93d77c246f45f6ae87720d6efd3"
+   },
+   "quelle": "https://rf4trophies.com/trophy/1014266",
+   "gefunden": "2026-09-19T06:17:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "niedrig"
+  },
+  {
+   "id": "rt-20260919-achtuba-117-101",
+   "gewaesser": "Achtuba",
+   "koordinaten": "117:101",
+   "zielfisch": [
+    "Großmäuliger Büffelfisch"
+   ],
+   "koeder": [
+    "Sinkende Boilies Lachs 20",
+    "Sinkende Boilies Gewürzmischung 20",
+    "Dip Pikanter Lachs"
+   ],
+   "montage": "Feedern (Grund)",
+   "eckdaten": "Clip 9 · Trophäe 15,502 kg / 1,02 m · Angler juis90",
+   "hinweis": "Gleiche Koordinate wie der Achtuba-Spot vom Vortag bei Trophyspot (117:101). Zweiter Fang gleicher Stelle (Angler juis90): auch auf Kokos gegangen, gefangen auf Lachs-Gewürz.",
+   "ausruestung": [
+    "Rute: Westhill Wingate FF120H (Feeder, 3,6 m, Test 30–120 g)",
+    "Rolle: Beluga Tagara II 6000",
+    "Schnur: Solid Materials HiPower Braid 80LB MC, 300 m",
+    "Leadcore: Simmons Leadcore Elastic Brown Camo 80LB",
+    "Blei: Helen Van Zandt CL Gripp Clay SW 60",
+    "Vorfach: geflochten 31,5 kg, 60 cm (Eigenbau)",
+    "Haken: Berserk Hooks Bloody Series S4/0",
+    "Köder: Old Pal Lachs 20 · Smart Boilies Gewürzmischung 20 · Mad Mayers Pikanter Lachs (Dip)"
+   ],
+   "bilder": {
+    "fang": "https://rf4trophies.com/image-proxy/0eeff23c0ffcb840344b7a5b7dd3c3ec0e674fc130ea5922289eaa0fe78a30f3",
+    "setup": "https://rf4trophies.com/image-proxy/5bbd0cab3b50db96cc1dc06e72e8af9e1dbe8d7946610de14ee09c0909635571",
+    "net": "https://rf4trophies.com/image-proxy/92bc763448e2b33c71706cd78fb64aada6ec738ea3a8d976492f77a67550f0bd",
+    "map": "https://rf4trophies.com/image-proxy/c5606798763a3af1ecaf5edaacd87a95cfc06fae6bdd6ded051032d3c65ef7d1"
+   },
+   "quelle": "https://rf4trophies.com/trophy/17638",
+   "gefunden": "2026-09-19T04:20:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "ts-164",
+   "gewaesser": "Moskito-See",
+   "koordinaten": "50:80",
+   "zielfisch": [
+    "Aland"
+   ],
+   "koeder": [
+    "Grille Mais"
+   ],
+   "montage": "Posenangeln",
+   "eckdaten": "Clip 13 m · Posentiefe 160 cm",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789779892876-78b0c6b6e2610efc.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789779892854-41fe6a80810f63a4.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789780364950-7a44ba6bd9a969ae.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789779893635-89dc3e7b33b836d6.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789779893615-1dfb51856c894650.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789779894486-f7f6ee0efe856efe.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789780364853-31da980314246265.webp"
+   },
+   "likes": 0,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-19T01:04:54+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-163",
+   "gewaesser": "Alte Festung",
+   "koordinaten": "26:35",
+   "zielfisch": [
+    "Hecht"
+   ],
+   "koeder": [
+    "Blast X-Walker F130-03"
+   ],
+   "montage": "Spinnangeln",
+   "eckdaten": "Clip 20 · Einholtempo 50",
+   "hinweis": "ab 05:00 Uhr - 18:00 Uhr Linke Seite geht genauso ;)",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789762674823-1366f365c32da341.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789762674029-8a297959e25b9131.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789762674903-1f3ccb0efd834188.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789762675607-08ace5404c6f08f1.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-18T20:17:55+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-162",
+   "gewaesser": "Fluss Sura",
+   "koordinaten": "72:12",
+   "zielfisch": [
+    "Steinschill"
+   ],
+   "koeder": [
+    "Laube (Köder)"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip Gefühl ca. 20 Meter",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789756366538-3a72f444e157a32f.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789756365792-0fca8f009def6207.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789756366464-0c0fb4f5ac2b8845.webp"
+   },
+   "likes": 0,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-18T18:32:46+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-161",
+   "gewaesser": "Windenbach",
+   "koordinaten": "87:87",
+   "zielfisch": [
+    "Rotauge"
+   ],
+   "koeder": [
+    "Käse"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 10",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789751217582-00fe7ed1fd2d3fb0.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789751217187-329eec0331dc866c.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789751218805-d1ea1f4848668bd5.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-18T17:06:58+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-160",
+   "gewaesser": "Achtuba",
+   "koordinaten": "117:101",
+   "zielfisch": [
+    "Großmäuliger Büffelfisch"
+   ],
+   "koeder": [
+    "22er Kokos & Sahne PopUp",
+    "Kokos & Sahne Mais"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 8m",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789734344312-43dbb7dee9154d3c.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789734343025-d7f1270c96a81967.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789734345367-df7a7ab4510381f6.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789734346910-36ece5bc9b379913.webp"
+   },
+   "likes": 3,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-18T12:25:46+00:00",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "ts-159",
+   "gewaesser": "Bärensee",
+   "koordinaten": "55:63",
+   "zielfisch": [
+    "Karpfen"
+   ],
+   "koeder": [
+    "Banane 26 Pop . Banane Gelb",
+    "Sahne"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip Clip 22 · Temperatur normal",
+   "hinweis": "ca 18:00",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789732960267-4dbdb4ebab36e259.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789732959851-0cd99ca36ac11274.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789745650834-bd5cf4d6525a5c1e.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789732960897-113959525e8f38fa.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789745650945-d154b2d2a2fb19aa.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-18T12:02:40+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-158",
+   "gewaesser": "Bärensee",
+   "koordinaten": "55:63",
+   "zielfisch": [
+    "Karpfen"
+   ],
+   "koeder": [
+    "Old Pal Banane 26 Pop-Up",
+    "Old Pal Banane Gelb",
+    "Old Pal Sahne"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 22 · Temperatur normal",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789711859652-92473ed9e9dc7489.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789711859369-1b3d4629c89230e6.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789711860338-4dfff8da7ad6b095.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789711859736-9ae6cb460cfc0c6c.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789711860576-501b8be0f0f75286.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-18T06:11:00+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-157",
+   "gewaesser": "Europäisches Nordmeer",
+   "koordinaten": null,
+   "zielfisch": [
+    "Rotbarsch"
+   ],
+   "koeder": [],
+   "montage": "Meeresangeln",
+   "eckdaten": "Clip 120-e8",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789683554165-e84813732e48062c.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789683554100-993e159f36f2b7b1.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789683554920-60a071548b0244a4.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789683554871-645033d305b58811.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789683555874-be81649ee4c464ec.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789683555823-6f265325be1c8315.webp",
+    "bycatch": "https://trophyspot.de/uploads/spots/1789683556484-bf3769dfab78f257.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-17T22:19:16+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-156",
+   "gewaesser": "Alte Festung",
+   "koordinaten": "37:57",
+   "zielfisch": [
+    "Hecht"
+   ],
+   "koeder": [
+    "KöFi Rotauge",
+    "Barsch etc"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 10",
+   "hinweis": "besonders früh und abend",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789681120040-f447199c24c30108.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789681118809-b82b28cf54a86bed.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789681119948-b93f22505b798aea.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789681121441-67b4c24dd5e872d9.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-17T21:38:41+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-155",
+   "gewaesser": "Achtuba",
+   "koordinaten": "140:124",
+   "zielfisch": [
+    "Südl..."
+   ],
+   "koeder": [
+    "Köcherfliegenlarve"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip gefühl",
+   "hinweis": "eher rechts Werfen / Links Verhackt man leicht / 139:126 geht auch sehr gut",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789674100006-466e6b79be457722.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789674099638-9eb69f66fe7663ba.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789674100345-3c9819bdaaacb5c9.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-17T19:41:40+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-154",
+   "gewaesser": "Kupfersee",
+   "koordinaten": "66:59",
+   "zielfisch": [
+    "Schleie"
+   ],
+   "koeder": [],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 7 m · Temperatur normal",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789670025904-9c1d4325f13f3ca7.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789670025098-40412c04c835e24d.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789670025901-d2c128a4a860b5a6.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789670026709-365269d7c1d58907.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-17T18:33:46+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-153",
+   "gewaesser": "Achtuba",
+   "koordinaten": "63:133",
+   "zielfisch": [
+    "Maifisch",
+    "Seelaube"
+   ],
+   "koeder": [
+    "Eintagsfliege"
+   ],
+   "montage": "Posenangeln",
+   "eckdaten": "Clip für Match ca 8-12m · Posentiefe 130 cm",
+   "hinweis": "hauptsächlich Tagsüber, Nacht eher weniger bzw Döbel etc",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789666524678-46acd4db68491ed7.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789666524015-7793cce9ee1e99ae.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789666525196-4386dc14f41fbedb.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789666526170-833d9dd929ec210a.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-17T17:35:26+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-152",
+   "gewaesser": "Kuori",
+   "koordinaten": "92:100",
+   "zielfisch": [
+    "Kuori Feldchen"
+   ],
+   "koeder": [
+    "Insekten Larven"
+   ],
+   "montage": "Posenangeln",
+   "eckdaten": "Clip 15M · Posentiefe 150 cm",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789659767870-ee2e1140e601a032.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789659767691-09361e0c7a519643.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789659768469-02220fa4fc56206c.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789659768932-7bc5c48795789b7a.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789659769372-e9e6e5f5e4d55f34.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-17T15:42:49+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-151",
+   "gewaesser": "Elk Lake",
+   "koordinaten": "65:92",
+   "zielfisch": [
+    "Warmouth"
+   ],
+   "koeder": [
+    "roterKompostwurm"
+   ],
+   "montage": "Posenangeln",
+   "eckdaten": "Clip 70% · Posentiefe 60 cm",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789590250466-a1afb39d9a41ba04.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789590250133-432f79da492c6568.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789590250818-e13640822982e54c.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-16T20:24:10+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-150",
+   "gewaesser": "Achtuba",
+   "koordinaten": "113:108",
+   "zielfisch": [
+    "Kaulbarsch",
+    "Stichling"
+   ],
+   "koeder": [
+    "Köcherfliegenlarve"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 5m",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789590019678-3f8b8ce94d2f46cf.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789590019403-ca36547385befc0b.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789590020066-7f031f4802e6def3.webp"
+   },
+   "likes": 4,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-16T20:20:20+00:00",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "ts-149",
+   "gewaesser": "Elk Lake",
+   "koordinaten": "56:91",
+   "zielfisch": [
+    "Getüpfelter Gabelwels"
+   ],
+   "koeder": [
+    "Fischfetzen"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 35m",
+   "hinweis": "7:30 Morgens, Sonne",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789579456264-66418c464460c88d.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789579456292-fdf44e1fdcd233d8.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789579457672-84d4a9eb3e78cb08.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789579458104-718a7c9ab41d3b03.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789579460032-1b9c00e65b43fb76.webp"
+   },
+   "likes": 0,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-16T17:24:20+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-148",
+   "gewaesser": "Kupfersee",
+   "koordinaten": "66:55",
+   "zielfisch": [
+    "Koi"
+   ],
+   "koeder": [
+    "Krabbe-Pfeffer 15-16mm"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 11 m",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789551496402-acd9181deb297708.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789551494676-b06463f156baf3c5.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789551495603-58e893208b1d16fe.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789551496443-2a3aaf5226d3d1a9.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-16T09:38:16+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-147",
+   "gewaesser": "Fluss Sura",
+   "koordinaten": "61:43",
+   "zielfisch": [
+    "Rotauge"
+   ],
+   "koeder": [
+    "Eintagsfligenlarve"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 10",
+   "hinweis": "in 1h 10 bälle futter",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789546708916-2a2ebddf26c9ab61.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789546709279-ed2873cc24e826b4.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789546709577-8130101506446a8d.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789546709905-a0635426c70de7fa.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789546710200-aea5f0d95e37f556.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789546710758-374425242bba8185.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789546710891-685ee499442daeb2.webp"
+   },
+   "likes": 3,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-16T08:18:30+00:00",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "ts-146",
+   "gewaesser": "Untere Tunguska",
+   "koordinaten": "57:116",
+   "zielfisch": [
+    "Maränen",
+    "Muksun etc"
+   ],
+   "koeder": [
+    "Tauwurm oder Blutegel mit Eintagsfliegen- oder Steinfliegenlarve"
+   ],
+   "montage": "Posenangeln",
+   "eckdaten": "Clip 15-20 · Posentiefe 150 cm",
+   "hinweis": "Tagsüber mit Stippe oder Match und Nachts mit 20er Haken, cl. 8, kleinen Grundruten und Seealge, Köcherfliegenlarve oder Wurm auf kleine Fische bzw Muscheln",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789506405868-a96442194503d18c.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789506406017-d6ce84dcdd71dc38.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789506406991-7391545a8470b4d6.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789506407851-9bf7e435da2c2fb9.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789506408123-fedb9450f8298196.webp"
+   },
+   "likes": 3,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-15T21:06:48+00:00",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "ts-145",
+   "gewaesser": "Moskito-See",
+   "koordinaten": "52:83",
+   "zielfisch": [
+    "Schlammpeitzger"
+   ],
+   "koeder": [
+    "Zuckmückenlarve"
+   ],
+   "montage": "Posenangeln",
+   "eckdaten": "Clip 45% · Posentiefe 100 cm",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789464852050-6a47902240e6e66b.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789464850989-52e52a364e1c6fda.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789464852047-824fd5c0c48686cd.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789464853295-2ed9843609450c61.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-15T09:34:13+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-144",
+   "gewaesser": "Kupfersee",
+   "koordinaten": "66:59",
+   "zielfisch": [
+    "Schleie",
+    "K-Schleie"
+   ],
+   "koeder": [
+    "Kokos Sahne Popup 16 & Kokos Sahne Weiß mit Kokosdip"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 6",
+   "hinweis": "Am besten Morgen & Abendstunden bis in den frühen Mittag",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789461240373-6972b12c37e5cf2a.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789461238805-da921cf0e7bfad5b.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789461240519-2ac1ee89f59b78f3.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789461241882-e130ea068b8d4854.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789461242291-cc51d2616c6c1285.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789461243802-ed165e5266dabc6d.webp"
+   },
+   "likes": 3,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-15T08:34:03+00:00",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "ts-143",
+   "gewaesser": "Untere Tunguska",
+   "koordinaten": "108:104",
+   "zielfisch": [
+    "Äschen",
+    "Bafo"
+   ],
+   "koeder": [
+    "Orig Popper 4-F006"
+   ],
+   "montage": "Spinnangeln",
+   "eckdaten": "Clip - · Einholtempo 50",
+   "hinweis": "Tagsüber bis in die Nacht\n45 Minuten geangelt, Ertrag ensprechend gut\nGeschwindigkeit: 50 + Shift \nKöderführung: Jerken\nKann auch mal ein Taimen anbeissen, aufpassen^^",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789416483713-f8795effdc74b803.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789416483315-c84fd918559e03ce.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789416484095-794cf871c0c27fd3.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789416484381-e2da117d5847d093.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789416484942-977c71e539f0324e.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-14T20:08:04+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-141",
+   "gewaesser": "Europäisches Nordmeer",
+   "koordinaten": "448:350",
+   "zielfisch": [
+    "Makrelenhecht"
+   ],
+   "koeder": [
+    "Naturalshrimp 7",
+    "5 02 & Realshrimp 6",
+    "5 03"
+   ],
+   "montage": "Meeresangeln",
+   "eckdaten": "Clip 10",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789412365585-5f4a4784f24e0563.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789412365570-77069056fbbddaa6.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789412367377-0650e068d03f0cbe.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789412367310-701415da04fb64b0.webp",
+    "other": "https://trophyspot.de/uploads/spots/1789412368699-de8eb06bd39e2145.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-14T18:59:28+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-140",
+   "gewaesser": "Windenbach",
+   "koordinaten": "116:99",
+   "zielfisch": [
+    "Flussmuschel"
+   ],
+   "koeder": [
+    "Seealge"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 7m",
+   "hinweis": "erste Muschel direkt Trophy",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789406239183-55baaa528ed1b17b.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789406238434-863b1bab31e5ec29.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789406239092-6721b35f4e43abfb.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-14T17:17:19+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-139",
+   "gewaesser": "Kupfersee",
+   "koordinaten": "66:55",
+   "zielfisch": [
+    "Koi",
+    "Dinkel"
+   ],
+   "koeder": [
+    "Scharfer Pfeffer 15",
+    "Schwarzer Pfeffer und Fisch 16",
+    "Scharfer Pfeffer"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 10m",
+   "hinweis": "24/7",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789403261068-aa95cbafeac69eb3.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789403260587-5de644c69e2ef034.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789403261401-a8f3665f59b1ebae.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789403261761-e27a324513de5bff.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789403262477-d3ad8aee8ab0f59c.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789403262641-616a0d764303e361.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-14T16:27:42+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-138",
+   "gewaesser": "Europäisches Nordmeer",
+   "koordinaten": "650:473",
+   "zielfisch": [
+    "Rochen",
+    "schw. Heilbutt und seltene"
+   ],
+   "koeder": [
+    "MiesmuschelundWattwurm"
+   ],
+   "montage": "Meeresangeln",
+   "eckdaten": "Clip 170m",
+   "hinweis": "Es gehen doch immer wieder seltene Fische rein. Versuch  ist es definitiv Wert",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789402010606-195a146a88c59dda.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789402010747-2f3a0e619c4d99b7.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789402011394-5dbc6a500599b706.webp",
+    "bycatch": "https://trophyspot.de/uploads/spots/1789402011445-b7d4ce8d4e217dd0.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-14T16:06:51+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-137",
+   "gewaesser": "Kuori",
+   "koordinaten": "113:120",
+   "zielfisch": [
+    "Hecht"
+   ],
+   "koeder": [
+    "Jerk Barschoptik"
+   ],
+   "montage": "Spinnangeln",
+   "eckdaten": "Clip ohne · Einholtempo 50",
+   "hinweis": "Ripperjerk oder selbstgemacht, beißen hauptsächlich in der Dämmerung oder Morgenrauen. Aber schöner Beifang",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789339325494-4df6ccac1af3de39.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789339325044-16bdb4b3f85d88f2.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789339326325-8fd671faf605a18b.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789339326987-392720ed74fc47ab.webp"
+   },
+   "likes": 0,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-13T22:42:07+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-136",
+   "gewaesser": "Europäisches Nordmeer",
+   "koordinaten": null,
+   "zielfisch": [
+    "Kleiner Rotbarsch"
+   ],
+   "koeder": [],
+   "montage": "Meeresangeln",
+   "eckdaten": "Clip 55",
+   "hinweis": null,
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789338489459-bc125b42a377c1ac.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789338489393-10cb6c1fc31d6132.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789338490088-8d54b09421801948.webp",
+    "bycatch": "https://trophyspot.de/uploads/spots/1789338490126-e46c5c0d73fa6f49.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-13T22:28:10+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-134",
+   "gewaesser": "Europäisches Nordmeer",
+   "koordinaten": "484:324",
+   "zielfisch": [
+    "Aalmutter Tr"
+   ],
+   "koeder": [
+    "RealShrimp 6.5 - 01"
+   ],
+   "montage": "Meeresangeln",
+   "eckdaten": "Clip 34",
+   "hinweis": "Starkes Pilken",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789319376349-b0279edbc4572e76.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789319376248-aed8d8687da8b9a0.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789319377394-4dbf44d2c43842f9.webp",
+    "bycatch": "https://trophyspot.de/uploads/spots/1789319377637-f367c898ad4ceac2.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-13T17:09:37+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-133",
+   "gewaesser": "Moskito-See",
+   "koordinaten": "53:87",
+   "zielfisch": [
+    "Goldi"
+   ],
+   "koeder": [
+    "Kokos-sahne"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 9",
+   "hinweis": "Beifang Giebel-Karausche",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789301158380-e4ffec4639e14165.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789301157936-1d5138fbcfc76780.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789301158679-2ff9c379cee41de9.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789301159138-2012c06ecf01ae36.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789301159430-83091412b9f02b5e.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-13T12:05:59+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-131",
+   "gewaesser": "Moskito-See",
+   "koordinaten": "71:87",
+   "zielfisch": [
+    "Schläfergrundel"
+   ],
+   "koeder": [
+    "Fisch Fetzen"
+   ],
+   "montage": "Posenangeln",
+   "eckdaten": "Clip Pose: 90cm · Posentiefe 90 cm",
+   "hinweis": "Direkt an die Steg kante werfen.\n!! LÄUFT NICHT IN DEN ABEND STUNDEN !!\nHoffe ihr bekommt dicke Schläfer-Grundeln und viel Spaß",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789257106644-bcb6546dddd3cf97.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789257105545-d4c7911dff8bfcf1.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789257106705-8d1f5f8e493849dd.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789257107752-d881c305009ded86.webp"
+   },
+   "likes": 1,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-12T23:51:47+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-130",
+   "gewaesser": "Bernstein-See",
+   "koordinaten": "64:94",
+   "zielfisch": [
+    "Karpfen"
+   ],
+   "koeder": [
+    "Lachs 20 & Gewürzmischung 20 mit Würziger Lachs Dip"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 35 Meter",
+   "hinweis": "Trophy: Bisszeit: Abends, Wetter: Klar, Wind: Leicht, Grad 10-15, Wasser: Normal",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789226281367-45d8d5a9f4363d6f.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789226281251-be7efd065a48cbeb.webp",
+    "net2": "https://trophyspot.de/uploads/spots/1789226281905-fb53bbc9d86b9f1c.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789226282014-72fbc5afcd1d8373.webp",
+    "groundbait": "https://trophyspot.de/uploads/spots/1789226282507-50fdf232a8a231d2.webp",
+    "map": "https://trophyspot.de/uploads/spots/1789226282832-3291e6ffea148f92.webp"
+   },
+   "likes": 2,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-12T15:18:02+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "ts-129",
+   "gewaesser": "Kupfersee",
+   "koordinaten": "61:62",
+   "zielfisch": [
+    "Kois Mix"
+   ],
+   "koeder": [
+    "siehe Setup"
+   ],
+   "montage": "Grundangeln",
+   "eckdaten": "Clip 10",
+   "hinweis": "24/7",
+   "bilder": {
+    "spot": "https://trophyspot.de/uploads/spots/1789219552883-44ed0c27bf709215.webp",
+    "net": "https://trophyspot.de/uploads/spots/1789219552089-75858b451f912b3c.webp",
+    "setup": "https://trophyspot.de/uploads/spots/1789219553282-60aaebfd0d21dfe5.webp"
+   },
+   "likes": 7,
+   "quelle": "https://trophyspot.de/",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-12T13:25:53+00:00",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "seed-kuori-120-113",
+   "gewaesser": "Kuori",
+   "koordinaten": "120:113",
+   "zielfisch": [
+    "Kuori Felchen"
+   ],
+   "koeder": [
+    "Eintagsfliegenlarve",
+    "Steinfliegenlarve"
+   ],
+   "montage": "Posenangeln",
+   "hinweis": "Clip 15-20 m",
+   "quelle": "https://www.rf4-spots.de/index.php/rf4-spots/bekannte-spots/kuori",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-01T00:00:00+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "seed-kuori-133-90",
+   "gewaesser": "Kuori",
+   "koordinaten": "133:90",
+   "zielfisch": [
+    "Zwergmaräne"
+   ],
+   "koeder": [
+    "Steinfliegenlarve",
+    "Zuckmückenlarve"
+   ],
+   "montage": "Posenangeln",
+   "hinweis": "Bolo & Stippe, Clip 9 m, Tiefe 1,50 m",
+   "quelle": "https://www.rf4-spots.de/index.php/rf4-spots/bekannte-spots/kuori",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-01T00:00:00+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "seed-kuori-129-109",
+   "gewaesser": "Kuori",
+   "koordinaten": "129:109",
+   "zielfisch": [
+    "Hecht"
+   ],
+   "koeder": [
+    "Mistwurm"
+   ],
+   "montage": "Grundangeln",
+   "hinweis": "Clip 10 m, Hakengröße 20er",
+   "quelle": "https://www.rf4-spots.de/index.php/rf4-spots/bekannte-spots/kuori",
+   "quelle_sprache": "de",
+   "gefunden": "2026-09-01T00:00:00+00:00",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "rt-20260919-59984",
+   "gewaesser": "Bärensee",
+   "koordinaten": "55:63",
+   "zielfisch": [
+    "Weißer Amur"
+   ],
+   "koeder": [
+    "Pellet Kokos & Sahne 25 (Old Pal)",
+    "Sinkende Boilies Kokos & Früchte 25 (Mad Mayers)",
+    "Dip Kokosnektar (Mad Mayers)",
+    "Lockfutter-Mix „Kokos“ (Eigenmischung, 50 g, 16 h)"
+   ],
+   "montage": "Feedern / Karpfen-Montage (Pellet + Boilie)",
+   "eckdaten": "Clip 22 · Trophäe · Angler Wyrdalak",
+   "hinweis": "Trophäe · Kommentar: „Nicht mein Tag mit den Blauen“",
+   "ausruestung": [
+    "Rute: Kingfisher Legacy Ti 13-4.50 (Karpfen, 3,9 m, Test 70–220 g)",
+    "Schnur: Solid Materials HiPower Braid 240LB MC, 600 m",
+    "Bissanzeiger: Westhill Horn B",
+    "Leadcore: Solid Materials Carp Leadcore Brown Camo 80LB",
+    "Blei: Helen Van Zandt CL Trilob Clay SW 90 (90 g)",
+    "Vorfach: geflochten 36 kg, 60 cm (Eigenbau)",
+    "Haken: Berserk Hooks Ultra Series S4/0"
+   ],
+   "bilder": {
+    "setup": "https://rf4trophies.com/image-proxy/aca50e89bb6033fe81c88c99c19d215903fdea95c9868344a25af88e72c286cd"
+   },
+   "quelle": "https://rf4trophies.com/trophy/59984",
+   "gefunden": "2026-09-19T09:36:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "rt-20260919-59980",
+   "gewaesser": "Moskito-See",
+   "koordinaten": "71:87",
+   "zielfisch": [
+    "Schläfergrundel"
+   ],
+   "koeder": [
+    "Natürliche Fischstückchen (Naturköder)"
+   ],
+   "montage": "Posenangeln (Festmontage, Match)",
+   "eckdaten": "Farm 50 Min · Tiefe 80–90 · Angler CEKCYALbHOCTb",
+   "hinweis": "Farm 50 Min · Tiefe 80–90",
+   "ausruestung": [
+    "Rute: Syberia Linear Telescopic 20 (Match, 6 m, Test 4–40 g)",
+    "Schnur: Solid Materials Fluorocarbon 4,8LB, 30 m",
+    "Pose: Express Fishing Bob Original 4G YR (4 g)",
+    "Blei: 0,25 g (automatisch)",
+    "Haken: Berserk Hooks Rage Series S4 S8"
+   ],
+   "bilder": {
+    "setup": "https://rf4trophies.com/image-proxy/c0015d25ff29ad5558fea36bf1dd8b24e3159342a0feea1893a6611fa606354f"
+   },
+   "quelle": "https://rf4trophies.com/trophy/59980",
+   "gefunden": "2026-09-19T09:28:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "hoch"
+  },
+  {
+   "id": "rt-20260919-59978",
+   "gewaesser": "Fluss Sura",
+   "koordinaten": "73:12",
+   "zielfisch": [
+    "Wildkarpfen"
+   ],
+   "koeder": [],
+   "montage": "",
+   "eckdaten": "Clip 22 · Angler vyi",
+   "hinweis": "Seltener Trophäen-Wildkarpfen (blau) · Angler dachte an einen Wels Kein Setup-Bild im Post – Köder/Futter unbekannt.",
+   "ausruestung": [],
+   "bilder": {
+    "fang": "https://rf4trophies.com/image-proxy/2ba1501768826e3d2ad271456c71be85a9b32b434295da2694a7bf7a1eebe8ef",
+    "spot": "https://rf4trophies.com/image-proxy/5da80716f7e4d579ff81ef2a1d8b768003b78e72b868eb391b866bf5133d9203"
+   },
+   "quelle": "https://rf4trophies.com/trophy/59978",
+   "gefunden": "2026-09-19T09:24:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "rt-20260919-59977",
+   "gewaesser": "Fluss Sura",
+   "koordinaten": "81:32",
+   "zielfisch": [
+    "Marmorkarpfen"
+   ],
+   "koeder": [],
+   "montage": "",
+   "eckdaten": "Clip 35 · Angler Lissenok_",
+   "hinweis": "Trophäe Kein Setup-Bild im Post – Köder/Futter unbekannt.",
+   "ausruestung": [],
+   "bilder": {
+    "map": "https://rf4trophies.com/image-proxy/41988a2d601c4c9f711a8360c7fcd84b3000447976eb72f7944c70118b6bd717"
+   },
+   "quelle": "https://rf4trophies.com/trophy/59977",
+   "gefunden": "2026-09-19T09:21:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "rt-20260919-59976",
+   "gewaesser": "Kupfersee",
+   "koordinaten": "49:49",
+   "zielfisch": [
+    "Mischfisch"
+   ],
+   "koeder": [
+    "Sinkende Boilies Scharfer Pfeffer 15 (Helen Van Zandt)",
+    "Sinkende Boilies Schwarzer Pfeffer & Fisch 16 (Smart Boilies)",
+    "Dip Scharfer Pfeffer (Old Pal)",
+    "Lockfutter-Mix „Pfeffer“ (Eigenmischung, Stick/Bindung 16 h)"
+   ],
+   "montage": "Feedern (Grundmontage, 3 Ruten)",
+   "eckdaten": "Clip 13 · Farm (Mischfisch) · Angler Макс монгол",
+   "hinweis": "Farm · Temperatur normal",
+   "ausruestung": [
+    "Rute: Westhill Wingate FF130XH (Feeder, 3,9 m, Test 40–160 g)",
+    "Schnur: Solid Materials HiPower Braid 80LB MC, 600 m",
+    "Bissanzeiger: Express Fishing Twin Bells FA",
+    "Leadcore: Solid Materials Carp Leadcore Brown Camo 80LB",
+    "Blei: Helen Van Zandt CL Flat Pear Clay SW 70 (70 g)",
+    "Vorfach: geflochten 31,5 kg, 60 cm (Eigenbau)",
+    "Haken: Zenith Etalon Mugga S1"
+   ],
+   "bilder": {
+    "net": "https://rf4trophies.com/image-proxy/a9672790a012c636dee0724f45e0a7a7802f085a9c92c2eec39918e8c7e9be68",
+    "spot": "https://rf4trophies.com/image-proxy/3a1356ef6ae3308f0fb1e0f49c938661423a6a2921675e157a7d67185b148d3a",
+    "setup": "https://rf4trophies.com/image-proxy/72e07957b8f3d8beb007e591db358b2f2335d167ab253c8135f0ad6f1c747564"
+   },
+   "quelle": "https://rf4trophies.com/trophy/59976",
+   "gefunden": "2026-09-19T09:18:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "mittel"
+  },
+  {
+   "id": "rt-20260919-59974",
+   "gewaesser": "Achtuba",
+   "koordinaten": "147:23",
+   "zielfisch": [
+    "Scherg"
+   ],
+   "koeder": [
+    "Krebsschwanz",
+    "Dreissena-Muschel"
+   ],
+   "montage": "",
+   "eckdaten": "Clip 25 · Angler Валик 98 Беларусь",
+   "hinweis": "Kommentar: 2 Montagen auf Krebsschwanz, 1 auf Dreissena (Muschel) Kein Setup-Bild im Post – Köder/Futter unbekannt.",
+   "ausruestung": [],
+   "bilder": {
+    "net": "https://rf4trophies.com/image-proxy/d36fe352f05becf134df18d8eba06421777b283e5952df8fbd5f68b4757d8f7c"
+   },
+   "quelle": "https://rf4trophies.com/trophy/59974",
+   "gefunden": "2026-09-19T09:16:00+00:00",
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "mittel"
+  },
+  {
+   "montage": "Spinnfischen (Wobbler, Rucken)",
+   "koeder": [],
+   "ausruestung": [],
+   "bilder": {},
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "mittel",
+   "id": "rt-20260919-59985",
+   "gewaesser": "Fluss Sura",
+   "koordinaten": "27:119",
+   "zielfisch": [
+    "Rapfen"
+   ],
+   "eckdaten": "Trophäe · Geschwindigkeit 19 · Angler lex4ndro-_-",
+   "hinweis": "Kommentar: Besser Bisse beim Auswerfen Richtung rechtes Ufer; Trophäe in 5 Minuten. Kein Setup-Bild im Post – Köder/Futter unbekannt.",
+   "quelle": "https://rf4trophies.com/trophy/59985",
+   "gefunden": "2026-09-19T09:41:00+00:00"
+  },
+  {
+   "montage": "Spinnfischen",
+   "koeder": [],
+   "ausruestung": [],
+   "bilder": {},
+   "likes": 0,
+   "quelle_sprache": "ru",
+   "vertrauen": "mittel",
+   "id": "rt-20260919-59986",
+   "gewaesser": "Fluss Jama",
+   "koordinaten": "170:210",
+   "zielfisch": [
+    "Neiva"
+   ],
+   "eckdaten": "Trophäe · Geschwindigkeit 28",
+   "hinweis": "Kommentar: Spinner Nr. 1 (004), Drilling 4 mit Fransen. Kein Setup-Bild im Post – Köder/Futter unbekannt.",
+   "quelle": "https://rf4trophies.com/trophy/59986",
+   "gefunden": "2026-09-19T09:48:00+00:00"
+  }
+ ]
+}</script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uniq = a => [...new Set(a)].sort((x,y)=>x.localeCompare(y,'de'));
+const RANK = {hoch:0, mittel:1, niedrig:2};
+const st = {water:'', fish:'', bait:'', text:'', sort:'new', day:'today'};
+const isToday = iso => new Date(iso).toDateString() === new Date().toDateString();
+let spots = [];
+
+/* Alle 18 Gewässer aus dem deutschen Spiel-Glossar, mit Typ */
+const WATERS = [
+ ['Moskito-See','see'],['Elk Lake','see'],['Windenbach','fluss'],['Alte Festung','see'],['Fluss Belaja','fluss'],['Kuori','see'],
+ ['Bärensee','see'],['Wolchow','fluss'],['Siwerskyj Donez','fluss'],['Fluss Sura','fluss'],['Ladogasee','see'],['Bernstein-See','see'],
+ ['Der Ladoga-Archipel','see'],['Achtuba','fluss'],['Kupfersee','see'],['Untere Tunguska','fluss'],['Fluss Jama','fluss'],['Europäisches Nordmeer','meer']];
+const TYPE = {see:'See',fluss:'Fluss',meer:'Meer'};
+const ICON = {
+ see:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M3 15c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0M3 10c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0M8 19c1.3-.8 2.7-.8 4 0s2.7.8 4 0"/></svg>',
+ fluss:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M5 3c5 3 0 6 4 9s2 6 10 9"/><path d="M12 3c4 2 1 5 3 7"/></svg>',
+ meer:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M2 16c2.5-2.5 5-2.5 7.5 0s5 2.5 7.5 0 3-2 5-1M2 11c2.5-2.5 5-2.5 7.5 0s5 2.5 7.5 0 3-2 5-1"/><path d="M12 3v5M9.5 5.5 12 3l2.5 2.5"/></svg>'};
+const LABEL = {spot:'Spot · wohin werfen', fang:'Fang', setup:'Setup', net:'Kescher', map:'Karte'};
+const ORDER = ['spot','fang','setup','net','map'];
+
+function ago(iso){
+  const m = Math.round((Date.now()-new Date(iso))/60000);
+  if (m < 2) return 'gerade eben'; if (m < 60) return `vor ${m} Min.`; if (m < 1440) return `vor ${Math.round(m/60)} Std.`;
+  return `vor ${Math.round(m/1440)} Tg.`;
+}
+function pool(){ return spots.filter(s => st.day!=='today' || isToday(s.gefunden)); }
+function filtered(){
+  const t = st.text.toLowerCase();
+  const l = pool().filter(s => (!st.water || s.gewaesser===st.water) && (!st.fish || s.zielfisch.includes(st.fish)) &&
+    (!st.bait || s.koeder.includes(st.bait)) && (!t || JSON.stringify(s).toLowerCase().includes(t)));
+  const by = {new:(a,b)=>new Date(b.gefunden)-new Date(a.gefunden),
+    conf:(a,b)=>RANK[a.vertrauen]-RANK[b.vertrauen] || new Date(b.gefunden)-new Date(a.gefunden),
+    likes:(a,b)=>(b.likes||0)-(a.likes||0) || new Date(b.gefunden)-new Date(a.gefunden)};
+  return l.sort(by[st.sort]);
+}
+const tags = (arr, cls) => arr.length ? arr.map(x=>`<span class="tag ${cls}">${esc(x)}</span>`).join('') : '<span class="tag">–</span>';
+function gallery(s){
+  const b = s.bilder || {}; const keys = ORDER.filter(k => b[k]); if (!keys.length) return '';
+  const tile = (k, cls) => `<button class="ph ${cls}" data-id="${esc(s.id)}" data-k="${k}" aria-label="${esc(LABEL[k])}"><img loading="lazy" src="${esc(b[k])}" alt="${esc(LABEL[k])}" onerror="this.closest('.ph').remove()"><span class="cap">${esc(LABEL[k])}</span></button>`;
+  const [first, ...rest] = keys;
+  return `<div class="gal" style="${rest.length ? '' : 'grid-template-columns:1fr'}">${tile(first,'main')}${rest.length ? `<div class="side">${rest.map(k=>tile(k,'')).join('')}</div>` : ''}</div>`;
+}
+function card(s){
+  const tr = s.quelle_sprache && s.quelle_sprache !== 'de';
+  return `<article class="card ${esc(s.vertrauen)}">${gallery(s)}<div class="inner">
+    <div class="top"><div class="water">${esc(s.gewaesser)}</div>${s.koordinaten ? `<button class="coord" data-c="${esc(s.koordinaten)}" title="Koordinaten kopieren">${esc(s.koordinaten)}</button>` : ''}</div>
+    ${s.eckdaten ? `<div class="eck">${esc(s.eckdaten)}</div>` : ''}
+    <div class="row"><span class="lbl">Fisch</span><div class="tags">${tags(s.zielfisch,'fish')}</div></div>
+    <div class="row"><span class="lbl">Köder</span><div class="tags">${tags(s.koeder,'')}</div></div>
+    ${s.montage ? `<div class="row"><span class="lbl">Montage</span><div class="tags"><span class="tag">${esc(s.montage)}</span></div></div>` : ''}
+    ${(s.ausruestung&&s.ausruestung.length) ? `<details class="aus"><summary>Ausrüstung</summary><ul>${s.ausruestung.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>` : ''}
+    ${s.hinweis ? `<p class="note">${esc(s.hinweis)}</p>` : ''}
+    <div class="foot"><span class="badge ${esc(s.vertrauen)}">${esc(s.vertrauen)}</span>${s.likes ? `<span class="likes">♥ ${s.likes}</span>` : ''}<span>${ago(s.gefunden)}</span>
+      <span class="lang">${tr ? 'ÜBERSETZT · ' : ''}${esc((s.quelle_sprache||'de').toUpperCase())}</span>
+      <span class="links"><a href="${esc(s.quelle)}" target="_blank" rel="noopener noreferrer">Quelle ↗</a></span></div>
+  </div></article>`;
+}
+function renderWaters(){
+  const p = pool(); const cnt = {}; p.forEach(s => cnt[s.gewaesser] = (cnt[s.gewaesser]||0)+1);
+  const all = {}; spots.forEach(s => all[s.gewaesser] = (all[s.gewaesser]||0)+1);
+  const list = WATERS.map(([n,t]) => ({n,t,c:cnt[n]||0,a:all[n]||0})).sort((x,y)=>y.c-x.c || y.a-x.a || x.n.localeCompare(y.n,'de'));
+  $('waters').innerHTML = list.map(w => `<button class="wt ${w.t} ${w.c||st.day==='all'&&w.a ? '' : 'leer'}" data-w="${esc(w.n)}" aria-pressed="${st.water===w.n}">
+    <span class="bg"></span><span class="in">${ICON[w.t]}<span class="nm">${esc(w.n)}</span>
+    <span class="sub">${TYPE[w.t]} · ${st.day==='today' ? `${w.a} gesamt` : `${w.c} Spots`}</span></span>
+    ${(w.c) ? `<span class="n ${st.day==='today'?'today':''}">${w.c}</span>` : ''}</button>`).join('');
+  $('wHint').textContent = st.day==='today' ? 'Zahl = neue Spots heute · antippen zum Filtern' : 'Zahl = Spots insgesamt · antippen zum Filtern';
+}
+function render(){
+  const list = filtered();
+  document.querySelectorAll('#days button').forEach(b => b.setAttribute('aria-pressed', b.dataset.d===st.day));
+  $('nToday').textContent = spots.filter(s=>isToday(s.gefunden)).length; $('nAll').textContent = spots.length;
+  $('crumb').classList.toggle('on', !!st.water); $('crumbName').textContent = st.water;
+  $('count').textContent = `${list.length} ${list.length===1?'Spot':'Spots'}${st.day==='today'?' heute':''}${st.water?' · '+st.water:''}`;
+  renderWaters();
+  $('grid').innerHTML = list.length ? list.map(card).join('') : `<div class="empty">${st.day==='today' ? 'Heute noch keine neuen Spots.<br>Oben auf „Alle“ umschalten, um ältere zu sehen.' : 'Keine Spots für diese Filter.'}</div>`;
+}
+const toast = msg => { const t=$('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1400); };
+/* Lightbox */
+let lbList = [], lbI = 0;
+const lbShow = () => { const it = lbList[lbI]; $('lbImg').src = it.src; $('lbT').textContent = it.label; $('lbS').textContent = it.title + ' · ' + (lbI+1) + '/' + lbList.length; $('lb').classList.add('on'); };
+const lbClose = () => { $('lb').classList.remove('on'); $('lbImg').src=''; };
+
+$('waters').addEventListener('click', e => { const b=e.target.closest('.wt'); if(!b) return; st.water = st.water===b.dataset.w ? '' : b.dataset.w; render(); if(st.water) $('bar').scrollIntoView({behavior:'smooth',block:'start'}); });
+$('crumbX').onclick = () => { st.water=''; render(); };
+$('days').addEventListener('click', e => { const b=e.target.closest('button'); if(!b) return; st.day=b.dataset.d; render(); });
+$('grid').addEventListener('click', e => {
+  const c = e.target.closest('.coord');
+  if (c) { try { navigator.clipboard.writeText(c.dataset.c).then(()=>toast('Koordinaten kopiert: '+c.dataset.c)); } catch { toast(c.dataset.c); } return; }
+  const ph = e.target.closest('.ph'); if(!ph) return;
+  const s = spots.find(x => x.id === ph.dataset.id); if(!s) return; const ks = ORDER.filter(k => s.bilder[k]);
+  lbList = ks.map(k => ({src:s.bilder[k], label:LABEL[k], title:s.gewaesser+' '+(s.koordinaten||'')})); lbI = ks.indexOf(ph.dataset.k); lbShow();
+});
+$('lb').addEventListener('click', e => {
+  if (e.target.closest('.p')) { lbI=(lbI-1+lbList.length)%lbList.length; lbShow(); }
+  else if (e.target.closest('.n')) { lbI=(lbI+1)%lbList.length; lbShow(); }
+  else if (!e.target.closest('img')) lbClose();
+});
+document.addEventListener('keydown', e => { if(!$('lb').classList.contains('on')) return;
+  if(e.key==='Escape') lbClose(); if(e.key==='ArrowLeft'){lbI=(lbI-1+lbList.length)%lbList.length;lbShow();} if(e.key==='ArrowRight'){lbI=(lbI+1)%lbList.length;lbShow();} });
+$('fFisch').onchange = e => { st.fish=e.target.value; render(); };
+$('fKoeder').onchange = e => { st.bait=e.target.value; render(); };
+$('fSort').onchange = e => { st.sort=e.target.value; render(); };
+$('fText').oninput = e => { st.text=e.target.value; render(); };
+
+function start(db){
+  spots = db.spots;
+  $('upd').innerHTML = '<span class="t">Stand: </span>' + ago(db.updated);
+  $('kToday').textContent = spots.filter(s=>isToday(s.gefunden)).length; $('kAll').textContent = spots.length;
+  $('kWater').textContent = new Set(spots.map(s=>s.gewaesser)).size; $('kHigh').textContent = spots.filter(s=>s.vertrauen==='hoch').length;
+  uniq(spots.flatMap(s=>s.zielfisch)).forEach(v=>$('fFisch').insertAdjacentHTML('beforeend',`<option>${esc(v)}</option>`));
+  uniq(spots.flatMap(s=>s.koeder)).forEach(v=>$('fKoeder').insertAdjacentHTML('beforeend',`<option>${esc(v)}</option>`));
+  render();
+}
+const embedded = () => JSON.parse(document.getElementById('embedded').textContent);
+fetch('data/spots.json',{cache:'no-store'}).then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(start).catch(()=>start(embedded()));
+</script>
+<div id="stand" style="position:fixed;right:8px;bottom:6px;z-index:99;font:11px monospace;color:#7fe;background:#0008;padding:2px 6px;border-radius:6px"></div><script>try{var _d=JSON.parse(document.getElementById("embedded").textContent);document.getElementById("stand").textContent="Datenstand "+new Date(_d.updated).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" · "+_d.spots.length+" Spots · Datei-Version 3"}catch(e){}</script></body>
+</html>
