@@ -278,7 +278,7 @@ function detailHTML(s){
   const aus = s.ausruestung||[]; const mix = aus.filter(x=>/^Lockfutter/.test(x));
   const hooks = [...new Set(aus.filter(x=>/^Haken:/.test(x)).map(x=>hookSize(x.replace(/^Haken:\s*/,''))).filter(Boolean))];
   const kv = x => { const m=/^([^:]+):\s*(.*)$/.exec(x); return m?[m[1],m[2]]:['',x]; };
-  const list = a => `<div class="gear-list">${a.map(x=>{const [k,v]=kv(x);return `<div>${k?`<b>${esc(k)}</b>`:''}<span>${esc(v)}</span></div>`}).join('')}</div>`;
+  const list = a => `<div class="gear-list">${a.map(x=>{const [k,v]=kv(x);return `<div>${k?`<b>${esc(k.replace(/^Lockfutter-?/,'')||'Mischung')}</b>`:''}<span>${esc(v)}</span></div>`}).join('')}</div>`;
   const km = /(?:Klipp|Clip)\s+(\d+(?:\s?m)?)/i.exec(s.eckdaten||''); const klipp = km ? km[1].replace(/\s?m$/,'')+' m' : '';
   let h = '<h3>Spot-Informationen</h3>';
   h += row('Gewässer', esc(s.gewaesser));
